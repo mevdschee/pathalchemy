@@ -13,8 +13,13 @@ class PathAlchemy:
         for column in rs.cursor.description:
             table_name = None
             if hasattr(column, 'table_oid'):
-                statement = sqlalchemy.sql.text("""select relname from pg_class where oid=:oid""")
-                table_name = con.execute(statement, {"oid":column.table_oid}).fetchone()[0]
+                table_oids = {}
+                if column.table_oid in table_oids:
+                    table_name = table_oids[column.table_oid]
+                else:
+                    statement = sqlalchemy.sql.text("""select relname from pg_class where oid=:oid""")
+                    table_name = con.execute(statement, {"oid":column.table_oid}).fetchone()[0]
+                    table_oids[column.table_oid] = table_name
             tables[column.name] = table_name
         return tables   
     
