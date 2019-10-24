@@ -53,7 +53,7 @@ class PathAlchemy:
             meta.append({'name':column,'table':tables[i],'path':paths[i]})
         return meta
 
-    def q(self, sql, args):
+    def q(self, sql, args={}):
         with self.__engine.connect() as con:
             statement = sqlalchemy.sql.text(sql)
             rs = con.execute(statement, args)
@@ -63,7 +63,7 @@ class PathAlchemy:
             results = self._add_hashes(results)
             results = self._combine_into_tree(results,'.')
             results = self._remove_hashes(results)
-            print(JSONEncoder().encode(results))
+            return results
 
     def _get_all_records(self, rs, meta):
         records = []
@@ -141,6 +141,5 @@ class PathAlchemy:
         return PathAlchemy('postgresql+psycopg2://'+username+':'+password+'@'+address+':'+port+'/'+database)
 
 p = PathAlchemy.create('php-crud-api','php-crud-api','php-crud-api')
-p.q("""SELECT * from posts where posts.id=:id""",{"id":1})
-print('')
-p.q("""select posts.id as "$.posts[].id", comments.id as "$.posts[].comments[].id" from posts left join comments on post_id = posts.id where posts.id<=2""",{})
+results = p.q("""select posts.id as "$.posts[].id", comments.id as "$.posts[].comments[].id" from posts left join comments on post_id = posts.id where posts.id<=2 order by posts.id, comments.id""")
+print(JSONEncoder().encode(results))
