@@ -16,7 +16,20 @@ class PathAlchemy:
                 statement = sqlalchemy.sql.text("""select relname from pg_class where oid=:oid""")
                 table_name = con.execute(statement, {"oid":column.table_oid}).fetchone()[0]
             tables[column.name] = table_name
-        return tables    
+        return tables   
+    
+    def _get_path_columns(self, columns, tables):
+        path_columns = []
+        tablecount = len(set(tables.values()))
+        for i, column in enumerate(columns):
+            if (column[0:1] != '$'):
+                if tablecount>1:
+                    path_columns.append('$[].' + tables[columns[i]] + '.' + column)
+                else:
+                    path_columns.append('$[].' + column)
+            else:
+                path_columns.append(column)
+        return path_columns
 
     def q(self, sql, args):
         engine = sqlalchemy.create_engine('postgresql+psycopg2://php-crud-api:php-crud-api@127.0.0.1:5432/php-crud-api')
@@ -28,19 +41,11 @@ class PathAlchemy:
 
             columns = self._get_columns(rs)
             tables = self._get_tables(rs,con)
-
-            tablecount = len(set(tables.values()))
-
-            for i, column in enumerate(columns):
-                if (column[0:1] != '$'):
-                    if tablecount>1:
-                        columns[i] = '$[].' + tables[columns[i]] + '.' + column
-                    else:
-                        columns[i] = '$[].' + column
+            path_columns = self._get_path_columns(columns, tables)
                 
             for row in rs:
                 for i, value in enumerate(row):
-                    print(columns[i] + '=' + str(value))
+                    print(path_columns[i] + '=' + str(value))
 
 p = PathAlchemy()
 p.q("""SELECT * from posts where posts.id=:id""",{"id":1})
