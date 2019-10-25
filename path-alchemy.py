@@ -3,6 +3,10 @@ from collections import OrderedDict
 from hashlib import md5
 from json import JSONEncoder
 
+class PathError(Exception):
+   """Class for PathAlchemy path exceptions"""
+   pass
+
 class PathAlchemy:
 
     __engine = None
@@ -120,7 +124,7 @@ class PathAlchemy:
                     current[newName] = v
         return results['']
 
-    def _remove_hashes(self, tree, path=''):
+    def _remove_hashes(self, tree, path='$'):
         values = OrderedDict()
         trees = OrderedDict()
         results = []
@@ -133,9 +137,9 @@ class PathAlchemy:
             else:
                 values[key] = value
         if len(results):
-            # hidden = list(values.keys()) + list(trees.keys())
-            # if len(hidden)>0:
-            #     print('Warning: "'+','.join(hidden)+'" are hidden at path "$'+path+'"')
+            hidden = list(values.keys()) + list(trees.keys())
+            if len(hidden)>0:
+                raise PathError('Path "'+path+'.'+hidden[0]+'" is hidden by path "'+path+'[]"')
             return results
         return OrderedDict(list(values.items()) + list(trees.items()))
     
@@ -144,5 +148,5 @@ class PathAlchemy:
         return PathAlchemy('postgresql+psycopg2://'+username+':'+password+'@'+address+':'+port+'/'+database)
 
 p = PathAlchemy.create('php-crud-api','php-crud-api','php-crud-api')
-results = p.q("""select posts.id as "$.posts[].id", comments.id as "$.posts[].comments[].id" from posts left join comments on post_id = posts.id where posts.id<=2 order by posts.id, comments.id""")
+results = p.q("""select posts.id as "$.posts[].id", comments.id as "$.posts.comments[].id" from posts left join comments on post_id = posts.id where posts.id<=2 order by posts.id, comments.id""")
 print(JSONEncoder().encode(results))
