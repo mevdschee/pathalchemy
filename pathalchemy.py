@@ -99,7 +99,8 @@ class PathAlchemy:
         for record in records:
             mapping = OrderedDict()
             for key, part in record.items():
-                hash = md5(JSONEncoder().encode(part).encode('utf-8')).hexdigest()
+                encoder = JSONEncoder(ensure_ascii=False,separators=(',',':'))
+                hash = md5(encoder.encode(part).encode('utf-8')).hexdigest()
                 mapping[key] = key[:-2] + '.!' + hash + '!'
             newKeys = []
             for key in record.keys():
