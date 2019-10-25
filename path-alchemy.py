@@ -120,19 +120,22 @@ class PathAlchemy:
                     current[newName] = v
         return results['']
 
-    def _remove_hashes(self, tree):
+    def _remove_hashes(self, tree, path=''):
         values = OrderedDict()
         trees = OrderedDict()
         results = []
         for key, value in tree.items():
             if type(value) == OrderedDict:
                 if key[:1] == '!' and key[-1:] == '!':
-                    results.append(self._remove_hashes(tree[key]))
+                    results.append(self._remove_hashes(tree[key],path+'[]'))
                 else:
-                    trees[key] = self._remove_hashes(tree[key])
+                    trees[key] = self._remove_hashes(tree[key],path+'.'+key)
             else:
                 values[key] = value
         if len(results):
+            # hidden = list(values.keys()) + list(trees.keys())
+            # if len(hidden)>0:
+            #     print('Warning: "'+','.join(hidden)+'" are hidden at path "$'+path+'"')
             return results
         return OrderedDict(list(values.items()) + list(trees.items()))
     
