@@ -148,5 +148,5 @@ class PathAlchemy:
         return PathAlchemy('postgresql+psycopg2://'+username+':'+password+'@'+address+':'+port+'/'+database)
 
 p = PathAlchemy.create('php-crud-api','php-crud-api','php-crud-api')
-results = p.q("""select posts.id as "$.posts[].id", comments.id as "$.posts.comments[].id" from posts left join comments on post_id = posts.id where posts.id<=2 order by posts.id, comments.id""")
+results = p.q("""select posts.id as "$.posts[].id", comments.id as "$.posts[].comments[].id" from posts left join comments on post_id = posts.id where posts.id<=2 order by posts.id, comments.id""")
 print(JSONEncoder().encode(results))

@@ -1,6 +1,6 @@
-# path-alchemy
+# pathql-alchemy
 
-A Python 3 library for querying the database
+A Python 3 library for querying the database using PathQL
 
 ### Requirements
 
