@@ -22,10 +22,10 @@ class PathAlchemy:
 
     def _get_tables(self, rs, con):
         tables = []
+        table_oids = {}
         for column in rs.cursor.description:
             table_name = None
             if hasattr(column, 'table_oid'):
-                table_oids = {}
                 if column.table_oid in table_oids:
                     table_name = table_oids[column.table_oid]
                 else:
