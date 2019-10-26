@@ -30,17 +30,24 @@ class PathAlchemy:
                     table_name = table_oids[column.table_oid]
                 else:
                     statement = sqlalchemy.sql.text("""select relname from pg_class where oid=:oid""")
-                    table_name = con.execute(statement, {"oid":column.table_oid}).fetchone()[0]
+                    result = con.execute(statement, {"oid":column.table_oid}).fetchone()
+                    if result != None:
+                        table_name = result[0]
                     table_oids[column.table_oid] = table_name
             tables.append(table_name)
         return tables   
     
+    def _get_table_count(self, tables):
+        table_set = set(tables)
+        table_set.discard(None)
+        return len(table_set)
+
     def _get_paths(self, columns, tables):
         paths = []
-        tablecount = len(set(tables))
+        tablecount = self._get_table_count(tables)
         for i, column in enumerate(columns):
             if (column[0:1] != '$'):
-                if tablecount>1:
+                if tablecount>1 and tables[i]!=None:
                     paths.append('$[].' + tables[i] + '.' + column)
                 else:
                     paths.append('$[].' + column)
@@ -99,6 +106,8 @@ class PathAlchemy:
         for record in records:
             mapping = OrderedDict()
             for key, part in record.items():
+                if key[-2:]!='[]':
+                    continue
                 encoder = JSONEncoder(ensure_ascii=False,separators=(',',':'))
                 hash = md5(encoder.encode(part).encode('utf-8')).hexdigest()
                 mapping[key] = key[:-2] + '.!' + hash + '!'
