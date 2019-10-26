@@ -148,7 +148,7 @@ class PathAlchemy:
         if len(results):
             hidden = list(values.keys()) + list(trees.keys())
             if len(hidden)>0:
-                raise PathError('Path "'+path+'.'+hidden[0]+'" is hidden by path "'+path+'[]"')
+                raise PathError('The path "'+path+'.'+hidden[0]+'" is hidden by the path "'+path+'[]"')
             return results
         return OrderedDict(list(values.items()) + list(trees.items()))
     
