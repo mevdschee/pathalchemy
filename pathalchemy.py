@@ -1,4 +1,4 @@
-import sqlalchemy
+from sqlalchemy import create_engine, sql
 from collections import OrderedDict 
 from hashlib import md5
 from json import JSONEncoder
@@ -9,10 +9,10 @@ class PathError(Exception):
 
 class PathAlchemy:
 
-    __engine = None
+    _engine = None
 
     def __init__(self, dsn):
-        self.__engine = sqlalchemy.create_engine(dsn)
+        self._engine = create_engine(dsn)
 
     def _get_columns(self, rs):
         columns = []
@@ -29,7 +29,7 @@ class PathAlchemy:
                 if column.table_oid in table_oids:
                     table_name = table_oids[column.table_oid]
                 else:
-                    statement = sqlalchemy.sql.text("""select relname from pg_class where oid=:oid""")
+                    statement = sql.text("""select relname from pg_class where oid=:oid""")
                     result = con.execute(statement, {"oid":column.table_oid}).fetchone()
                     if result != None:
                         table_name = result[0]
@@ -64,9 +64,9 @@ class PathAlchemy:
             meta.append({'name':column,'table':tables[i],'path':paths[i]})
         return meta
 
-    def q(self, sql, args={}):
-        with self.__engine.connect() as con:
-            statement = sqlalchemy.sql.text(sql)
+    def q(self, query, args={}):
+        with self._engine.connect() as con:
+            statement = sql.text(query)
             rs = con.execute(statement, args)
             meta = self._get_meta(rs,con)
             records = self._get_all_records(rs, meta)

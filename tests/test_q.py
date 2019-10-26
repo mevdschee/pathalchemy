@@ -1,12 +1,16 @@
 import os
 import unittest
+import json
+import configparser
 from pathalchemy import PathAlchemy
-from json import JSONEncoder
 
 class TestQ(unittest.TestCase):
+
     def test_q(self):
-        p = PathAlchemy.create(os.environ["SQLALCHEMY_USERNAME"],os.environ["SQLALCHEMY_PASSWORD"],os.environ["SQLALCHEMY_DATABASE"])
-        encoder = JSONEncoder(ensure_ascii=False,separators=(',',':'))
+        config = configparser.ConfigParser()
+        config.read('test_config.ini')
+        p = PathAlchemy(config.get('unittest','dsn'))
+        encoder = json.JSONEncoder(ensure_ascii=False,separators=(',',':'))
         for a,b,c in self.q_data():
             self.assertEqual(encoder.encode(p.q(a,b)), c)
 
