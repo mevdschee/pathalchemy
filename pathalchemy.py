@@ -70,11 +70,10 @@ class PathAlchemy:
             rs = con.execute(statement, args)
             meta = self._get_meta(rs,con)
             records = self._get_all_records(rs, meta)
-            results = self._group_by_separator(records,'[]')
-            results = self._add_hashes(results)
-            results = self._combine_into_tree(results,'.')
-            results = self._remove_hashes(results)
-            return results
+            groups = self._group_by_separator(records,'[]')
+            paths = self._add_hashes(groups)
+            tree = self._combine_into_tree(paths,'.')
+            return self._remove_hashes(tree)
 
     def _get_all_records(self, rs, meta):
         records = []
