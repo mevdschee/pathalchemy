@@ -1,11 +1,14 @@
 from sqlalchemy import create_engine, sql
-from collections import OrderedDict 
+from collections import OrderedDict
 from hashlib import md5
 from json import JSONEncoder
 
+
 class PathError(Exception):
-   """Class for PathAlchemy path exceptions"""
-   pass
+    """Class for PathAlchemy path exceptions"""
+
+    pass
+
 
 class PathAlchemy:
 
@@ -17,33 +20,37 @@ class PathAlchemy:
     def _get_columns(self, rs):
         columns = []
         for column in rs.cursor.description:
-            if hasattr(column, 'table_oid'):
+            if hasattr(column, "table_oid"):
                 columns.append(column.name)
             else:
                 columns.append(column[0])
-        return columns    
+        return columns
 
     def _get_tables(self, rs, con):
         tables = []
         table_oids = {}
         for i, column in enumerate(rs.cursor.description):
             table_name = None
-            if hasattr(column, 'table_oid'):
+            if hasattr(column, "table_oid"):
                 if column.table_oid in table_oids:
                     table_name = table_oids[column.table_oid]
                 else:
-                    statement = sql.text("""select relname from pg_class where oid=:oid""")
-                    result = con.execute(statement, {"oid":column.table_oid}).fetchone()
+                    statement = sql.text(
+                        """select relname from pg_class where oid=:oid"""
+                    )
+                    result = con.execute(
+                        statement, {"oid": column.table_oid}
+                    ).fetchone()
                     if result != None:
                         table_name = result[0]
                     table_oids[column.table_oid] = table_name
-            elif hasattr(rs.cursor, '_result'):
+            elif hasattr(rs.cursor, "_result"):
                 result = rs.cursor._result.fields[i].table_name
-                if result != '':
+                if result != "":
                     table_name = result
             tables.append(table_name)
-        return tables   
-    
+        return tables
+
     def _get_table_count(self, tables):
         table_set = set(tables)
         table_set.discard(None)
@@ -53,33 +60,33 @@ class PathAlchemy:
         paths = []
         tablecount = self._get_table_count(tables)
         for i, column in enumerate(columns):
-            if (column[0:1] != '$'):
-                if tablecount>1 and tables[i]!=None:
-                    paths.append('$[].' + tables[i] + '.' + column)
+            if column[0:1] != "$":
+                if tablecount > 1 and tables[i] != None:
+                    paths.append("$[]." + tables[i] + "." + column)
                 else:
-                    paths.append('$[].' + column)
+                    paths.append("$[]." + column)
             else:
                 paths.append(column)
         return paths
 
-    def _get_meta(self,rs,con):
+    def _get_meta(self, rs, con):
         columns = self._get_columns(rs)
-        tables = self._get_tables(rs,con)
+        tables = self._get_tables(rs, con)
         paths = self._get_paths(columns, tables)
         meta = []
         for i, column in enumerate(columns):
-            meta.append({'name':column,'table':tables[i],'path':paths[i]})
+            meta.append({"name": column, "table": tables[i], "path": paths[i]})
         return meta
 
     def q(self, query, args={}):
         with self._engine.connect() as con:
             statement = sql.text(query)
             rs = con.execute(statement, args)
-            meta = self._get_meta(rs,con)
+            meta = self._get_meta(rs, con)
             records = self._get_all_records(rs, meta)
-            groups = self._group_by_separator(records,'[]')
+            groups = self._group_by_separator(records, "[]")
             paths = self._add_hashes(groups)
-            tree = self._combine_into_tree(paths,'.')
+            tree = self._combine_into_tree(paths, ".")
             return self._remove_hashes(tree)
 
     def _get_all_records(self, rs, meta):
@@ -87,7 +94,7 @@ class PathAlchemy:
         for row in rs:
             record = OrderedDict()
             for i, value in enumerate(row):
-                record[meta[i]['path'][1:]] = value
+                record[meta[i]["path"][1:]] = value
             records.append(record)
         return records
 
@@ -95,28 +102,28 @@ class PathAlchemy:
         results = []
         for record in records:
             result = OrderedDict()
-            for name,value in record.items():
+            for name, value in record.items():
                 parts = name.split(separator)
                 newName = parts.pop()
                 path = separator.join(parts)
-                if len(parts)>0:
+                if len(parts) > 0:
                     path += separator
                 if not path in result:
                     result[path] = OrderedDict()
                 result[path][newName] = value
             results.append(result)
         return results
-    
+
     def _add_hashes(self, records):
         results = []
         for record in records:
             mapping = OrderedDict()
             for key, part in record.items():
-                if key[-2:]!='[]':
+                if key[-2:] != "[]":
                     continue
-                encoder = JSONEncoder(ensure_ascii=False,separators=(',',':'))
-                hash = md5(encoder.encode(part).encode('utf-8')).hexdigest()
-                mapping[key] = key[:-2] + '.!' + hash + '!'
+                encoder = JSONEncoder(ensure_ascii=False, separators=(",", ":"))
+                hash = md5(encoder.encode(part).encode("utf-8")).hexdigest()
+                mapping[key] = key[:-2] + ".!" + hash + "!"
             newKeys = []
             for key in record.keys():
                 for search in sorted(mapping.keys(), key=len, reverse=True):
@@ -138,27 +145,33 @@ class PathAlchemy:
                             current[p] = OrderedDict()
                         current = current[p]
                     current[newName] = v
-        return results['']
+        return results[""]
 
-    def _remove_hashes(self, tree, path='$'):
+    def _remove_hashes(self, tree, path="$"):
         values = OrderedDict()
         trees = OrderedDict()
         results = []
         for key, value in tree.items():
             if type(value) == OrderedDict:
-                if key[:1] == '!' and key[-1:] == '!':
-                    results.append(self._remove_hashes(tree[key],path+'[]'))
+                if key[:1] == "!" and key[-1:] == "!":
+                    results.append(self._remove_hashes(tree[key], path + "[]"))
                 else:
-                    trees[key] = self._remove_hashes(tree[key],path+'.'+key)
+                    trees[key] = self._remove_hashes(tree[key], path + "." + key)
             else:
                 values[key] = value
         if len(results):
             hidden = list(values.keys()) + list(trees.keys())
-            if len(hidden)>0:
-                raise PathError('The path "'+path+'.'+hidden[0]+'" is hidden by the path "'+path+'[]"')
+            if len(hidden) > 0:
+                raise PathError(
+                    'The path "%s.%s" is hidden by the path "%s[]"'
+                    % (path, hidden[0], path)
+                )
             return results
         return OrderedDict(list(values.items()) + list(trees.items()))
-    
+
     @staticmethod
-    def create(username, password, database, address='127.0.0.1', port='5432'):
-        return PathAlchemy('postgresql+psycopg2://'+username+':'+password+'@'+address+':'+port+'/'+database)
+    def create(username, password, database, address="127.0.0.1", port="5432"):
+        return PathAlchemy(
+            "postgresql+psycopg2://%s:%s@%s:%s/%s"
+            % (username, password, address, port, database)
+        )
