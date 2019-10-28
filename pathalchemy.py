@@ -17,13 +17,16 @@ class PathAlchemy:
     def _get_columns(self, rs):
         columns = []
         for column in rs.cursor.description:
-            columns.append(column.name)
+            if hasattr(column, 'table_oid'):
+                columns.append(column.name)
+            else:
+                columns.append(column[0])
         return columns    
 
     def _get_tables(self, rs, con):
         tables = []
         table_oids = {}
-        for column in rs.cursor.description:
+        for i, column in enumerate(rs.cursor.description):
             table_name = None
             if hasattr(column, 'table_oid'):
                 if column.table_oid in table_oids:
@@ -34,6 +37,10 @@ class PathAlchemy:
                     if result != None:
                         table_name = result[0]
                     table_oids[column.table_oid] = table_name
+            elif hasattr(rs.cursor, '_result'):
+                result = rs.cursor._result.fields[i].table_name
+                if result != '':
+                    table_name = result
             tables.append(table_name)
         return tables   
     

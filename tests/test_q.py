@@ -35,12 +35,11 @@ class TestQ(unittest.TestCase):
                 'select posts.id as "$.comments[].post.id", comments.id as "$.comments[].id" from posts left join comments on post_id = posts.id where posts.id<=2 order by posts.id, comments.id', {},
                 '{"comments":[{"id":1,"post":{"id":1}},{"id":2,"post":{"id":1}},{"id":3,"post":{"id":2}},{"id":4,"post":{"id":2}},{"id":5,"post":{"id":2}},{"id":6,"post":{"id":2}}]}'
             ],
-            ['select count(*) from posts', {}, '[{"count":12}]'],
             ['select count(*) as "posts" from posts', {}, '[{"posts":12}]'],
             ['select count(*) as "$[].posts" from posts', {}, '[{"posts":12}]'],
             ['select count(*) as "$.posts" from posts', {}, '{"posts":12}'],
             [
-                'select categories.name, count(posts.id) as "post_count" from posts, categories where posts.category_id = categories.id group by categories.name', {},
+                'select categories.name, count(posts.id) as "post_count" from posts, categories where posts.category_id = categories.id group by categories.name order by categories.name', {},
                 '[{"name":"announcement","post_count":11},{"name":"article","post_count":1}]'
             ],
             ['select count(*) as "$.statistics.posts" from posts', {}, '{"statistics":{"posts":12}}'],
