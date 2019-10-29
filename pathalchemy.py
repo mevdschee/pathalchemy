@@ -47,10 +47,10 @@ class PathAlchemy:
             meta.append({"name": column, "path": paths[i]})
         return meta
 
-    def q(self, query, args={}):
+    def q(self, query, params={}):
         with self._engine.connect() as con:
             statement = sql.text(query)
-            rs = con.execute(statement, args)
+            rs = con.execute(statement, params)
             meta = self._get_meta(rs, con)
             records = self._get_all_records(rs, meta)
             groups = self._group_by_separator(records, "[]")
