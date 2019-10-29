@@ -20,62 +20,31 @@ class PathAlchemy:
     def _get_columns(self, rs):
         columns = []
         for column in rs.cursor.description:
-            if hasattr(column, "table_oid"):
+            if hasattr(column, "name"):
                 columns.append(column.name)
             else:
                 columns.append(column[0])
         return columns
 
-    def _get_tables(self, rs, con):
-        tables = []
-        table_oids = {}
-        for i, column in enumerate(rs.cursor.description):
-            table_name = None
-            if hasattr(column, "table_oid"):
-                if column.table_oid in table_oids:
-                    table_name = table_oids[column.table_oid]
-                else:
-                    statement = sql.text(
-                        """select relname from pg_class where oid=:oid"""
-                    )
-                    result = con.execute(
-                        statement, {"oid": column.table_oid}
-                    ).fetchone()
-                    if result != None:
-                        table_name = result[0]
-                    table_oids[column.table_oid] = table_name
-            elif hasattr(rs.cursor, "_result"):
-                result = rs.cursor._result.fields[i].table_name
-                if result != "":
-                    table_name = result
-            tables.append(table_name)
-        return tables
-
-    def _get_table_count(self, tables):
-        table_set = set(tables)
-        table_set.discard(None)
-        return len(table_set)
-
-    def _get_paths(self, columns, tables):
+    def _get_paths(self, columns):
         paths = []
-        tablecount = self._get_table_count(tables)
-        for i, column in enumerate(columns):
-            if column[0:1] != "$":
-                if tablecount > 1 and tables[i] != None:
-                    paths.append("$[]." + tables[i] + "." + column)
-                else:
-                    paths.append("$[]." + column)
-            else:
-                paths.append(column)
+        path = "$[]"
+        for column in columns:
+            prop = column
+            if column[0:1] == "$":
+                pos = column.rfind(".")
+                if pos != -1:
+                    path = column[:pos]
+                    prop = column[pos + 1 :]
+            paths.append(path + "." + prop)
         return paths
 
     def _get_meta(self, rs, con):
         columns = self._get_columns(rs)
-        tables = self._get_tables(rs, con)
-        paths = self._get_paths(columns, tables)
+        paths = self._get_paths(columns)
         meta = []
         for i, column in enumerate(columns):
-            meta.append({"name": column, "table": tables[i], "path": paths[i]})
+            meta.append({"name": column, "path": paths[i]})
         return meta
 
     def q(self, query, args={}):

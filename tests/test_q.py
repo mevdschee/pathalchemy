@@ -28,11 +28,6 @@ class TestQ(unittest.TestCase):
                 '[{"id":1},{"id":2}]',
             ],
             [
-                "select posts.id, comments.id from posts left join comments on post_id = posts.id where posts.id=1 order by posts.id, comments.id",
-                {},
-                '[{"posts":{"id":1},"comments":{"id":1}},{"posts":{"id":1},"comments":{"id":2}}]',
-            ],
-            [
                 'select posts.id as "$[].posts.id", comments.id as "$[].comments.id" from posts left join comments on post_id = posts.id where posts.id=1 order by posts.id, comments.id',
                 {},
                 '[{"posts":{"id":1},"comments":{"id":1}},{"posts":{"id":1},"comments":{"id":2}}]',
@@ -61,7 +56,7 @@ class TestQ(unittest.TestCase):
                 '{"statistics":{"posts":12}}',
             ],
             [
-                'select (select count(*) from posts) as "$.stats.posts", (select count(*) from comments) as "$.stats.comments"',
+                'select (select count(*) from posts) as "$.stats.posts", (select count(*) from comments) as "comments"',
                 {},
                 '{"stats":{"posts":12,"comments":6}}',
             ],
