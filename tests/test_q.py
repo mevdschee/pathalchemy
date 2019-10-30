@@ -9,7 +9,13 @@ class TestQ(unittest.TestCase):
     def test_q(self):
         config = configparser.ConfigParser()
         config.read("test_config.ini")
-        p = PathAlchemy(config.get("unittest", "dsn"))
+        username = config.get("unittest", "username")
+        password = config.get("unittest", "password")
+        database = config.get("unittest", "database")
+        driver = config.get("unittest", "driver")
+        address = config.get("unittest", "address")
+        port = config.get("unittest", "port")
+        p = PathAlchemy.create(username,password,database,driver,address,port)
         encoder = json.JSONEncoder(ensure_ascii=False, separators=(",", ":"))
         for a, b, c in self.q_data():
             self.assertEqual(encoder.encode(p.q(a, b)), c)

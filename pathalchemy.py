@@ -139,8 +139,8 @@ class PathAlchemy:
         return OrderedDict(list(values.items()) + list(trees.items()))
 
     @staticmethod
-    def create(username, password, database, address="127.0.0.1", port="5432"):
+    def create(username, password, database, driver="postgresql", address="127.0.0.1", port="5432"):
         return PathAlchemy(
-            "postgresql+psycopg2://%s:%s@%s:%s/%s"
-            % (username, password, address, port, database)
+            "%s://%s:%s@%s:%s/%s"
+            % (driver, username, password, address, port, database)
         )
