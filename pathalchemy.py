@@ -17,9 +17,9 @@ class PathAlchemy:
     def __init__(self, dsn):
         self._engine = create_engine(dsn)
 
-    def _get_columns(self, rs):
+    def _get_columns(self, descripton):
         columns = []
-        for column in rs.cursor.description:
+        for column in descripton:
             if hasattr(column, "name"):
                 columns.append(column.name)
             else:
@@ -39,8 +39,8 @@ class PathAlchemy:
             paths.append(path + "." + prop)
         return paths
 
-    def _get_meta(self, rs, con):
-        columns = self._get_columns(rs)
+    def _get_meta(self, description):
+        columns = self._get_columns(description)
         paths = self._get_paths(columns)
         meta = []
         for i, column in enumerate(columns):
@@ -51,7 +51,7 @@ class PathAlchemy:
         with self._engine.connect() as con:
             statement = sql.text(query)
             rs = con.execute(statement, params)
-            meta = self._get_meta(rs, con)
+            meta = self._get_meta(rs.cursor.description)
             records = self._get_all_records(rs, meta)
             groups = self._group_by_separator(records, "[]")
             paths = self._add_hashes(groups)
