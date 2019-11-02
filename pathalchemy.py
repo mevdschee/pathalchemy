@@ -87,8 +87,9 @@ class PathAlchemy:
                 hash = md5(encoder.encode(part).encode("utf-8")).hexdigest()
                 mapping[key] = key[:-2] + ".!" + hash + "!"
             newKeys = []
+            mappingKeys = sorted(mapping.keys(), key=len, reverse=True)
             for key in record.keys():
-                for search in sorted(mapping.keys(), key=len, reverse=True):
+                for search in mappingKeys:
                     key = key.replace(search, mapping[search])
                 newKeys.append(key)
             results.append(OrderedDict(zip(newKeys, record.values())))
