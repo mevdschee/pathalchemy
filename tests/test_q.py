@@ -15,10 +15,10 @@ class TestQ(unittest.TestCase):
         driver = config.get("unittest", "driver")
         address = config.get("unittest", "address")
         port = config.get("unittest", "port")
-        p = PathAlchemy.create(username,password,database,driver,address,port)
+        db = PathAlchemy.create(username,password,database,driver,address,port)
         encoder = json.JSONEncoder(ensure_ascii=False, separators=(",", ":"))
         for a, b, c in self.q_data():
-            self.assertEqual(encoder.encode(p.q(a, b)), c)
+            self.assertEqual(encoder.encode(db.path_query(a, b)), c)
 
     def q_data(self):
         return [
