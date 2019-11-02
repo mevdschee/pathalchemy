@@ -39,7 +39,7 @@ class PathAlchemy:
             paths.append(path + "." + prop)
         return paths
 
-    def q(self, query, params={}):
+    def path_query(self, query, params={}):
         with self._engine.connect() as con:
             statement = sql.text(query)
             rs = con.execute(statement, params)
