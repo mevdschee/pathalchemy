@@ -86,13 +86,13 @@ class PathAlchemy:
                 encoder = JSONEncoder(ensure_ascii=False, separators=(",", ":"))
                 hash = md5(encoder.encode(part).encode("utf-8")).hexdigest()
                 mapping[key] = key[:-2] + ".!" + hash + "!"
-            newKeys = []
             mappingKeys = sorted(mapping.keys(), key=len, reverse=True)
-            for key in record.keys():
+            result = {}
+            for key, value in record.items():
                 for search in mappingKeys:
                     key = key.replace(search, mapping[search])
-                newKeys.append(key)
-            results.append(OrderedDict(zip(newKeys, record.values())))
+                result[key] = value
+            results.append(result)
         return results
 
     def _combine_into_tree(self, records, separator):
