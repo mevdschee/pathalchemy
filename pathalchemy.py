@@ -39,31 +39,24 @@ class PathAlchemy:
             paths.append(path + "." + prop)
         return paths
 
-    def _get_meta(self, description):
-        columns = self._get_columns(description)
-        paths = self._get_paths(columns)
-        meta = []
-        for i, column in enumerate(columns):
-            meta.append({"name": column, "path": paths[i]})
-        return meta
-
     def q(self, query, params={}):
         with self._engine.connect() as con:
             statement = sql.text(query)
             rs = con.execute(statement, params)
-            meta = self._get_meta(rs.cursor.description)
-            records = self._get_all_records(rs, meta)
+            columns = self._get_columns(rs.cursor.description)
+            paths = self._get_paths(columns)
+            records = self._get_all_records(rs, paths)
             groups = self._group_by_separator(records, "[]")
             paths = self._add_hashes(groups)
             tree = self._combine_into_tree(paths, ".")
             return self._remove_hashes(tree)
 
-    def _get_all_records(self, rs, meta):
+    def _get_all_records(self, rs, paths):
         records = []
         for row in rs:
             record = OrderedDict()
             for i, value in enumerate(row):
-                record[meta[i]["path"][1:]] = value
+                record[paths[i][1:]] = value
             records.append(record)
         return records
 
