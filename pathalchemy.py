@@ -49,7 +49,7 @@ class PathAlchemy:
             groups = self._group_by_separator(records, "[]")
             hashes = self._add_hashes(groups)
             tree = self._combine_into_tree(hashes, ".")
-            return self._remove_hashes(tree)
+            return self._remove_hashes(tree, "$")
 
     def _get_all_records(self, rs, paths):
         records = []
@@ -110,7 +110,7 @@ class PathAlchemy:
                     current[newName] = v
         return results[""]
 
-    def _remove_hashes(self, tree, path="$"):
+    def _remove_hashes(self, tree, path):
         values = OrderedDict()
         trees = OrderedDict()
         results = []
