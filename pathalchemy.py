@@ -49,7 +49,8 @@ class PathAlchemy:
             groups = self._group_by_separator(records, "[]")
             hashes = self._add_hashes(groups)
             tree = self._combine_into_tree(hashes, ".")
-            return self._remove_hashes(tree, "$")
+            result = self._remove_hashes(tree, "$")
+            return result
 
     def _get_all_records(self, rs, paths):
         records = []
