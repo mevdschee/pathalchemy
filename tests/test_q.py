@@ -6,7 +6,7 @@ from pathalchemy import PathAlchemy
 
 
 class TestQ(unittest.TestCase):
-    def test_q(self):
+    def test_path_query(self):
         config = configparser.ConfigParser()
         config.read("test_config.ini")
         username = config.get("unittest", "username")
@@ -17,10 +17,10 @@ class TestQ(unittest.TestCase):
         port = config.get("unittest", "port")
         db = PathAlchemy.create(username,password,database,driver,address,port)
         encoder = json.JSONEncoder(ensure_ascii=False, separators=(",", ":"))
-        for a, b, c in self.q_data():
+        for a, b, c in self.path_query_data():
             self.assertEqual(encoder.encode(db.path_query(a, b)), c)
 
-    def q_data(self):
+    def path_query_data(self):
         return [
             [
                 "select id, content from posts where id=:id",
