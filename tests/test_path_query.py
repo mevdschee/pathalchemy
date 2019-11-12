@@ -5,7 +5,7 @@ import configparser
 from pathalchemy import PathAlchemy
 
 
-class TestQ(unittest.TestCase):
+class TestPathQuery(unittest.TestCase):
     def test_path_query(self):
         config = configparser.ConfigParser()
         config.read("test_config.ini")
